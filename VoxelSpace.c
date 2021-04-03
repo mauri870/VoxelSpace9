@@ -65,6 +65,6 @@ main(int argc, char *argv[])
 
         /* If the timer ticks... */
         if(e == timer)
-            fprintf(2, "Tick...");
+            fprint(2, "Tick...");
 	}
 }
