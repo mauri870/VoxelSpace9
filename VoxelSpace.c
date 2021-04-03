@@ -1,5 +1,6 @@
 #include <u.h>
 #include <libc.h>
+#include <stdio.h>
 #include <draw.h>
 #include <event.h>
 
@@ -24,7 +25,7 @@ eresized(int new)
 	windowDimensions = Pt(Dx(screen->r), Dy(screen->r));
 
 	/* Draw the background Red */
-	draw(screen, insetrect(screen->r, borderWidth), 
+	draw(screen, insetrect(screen->r, 20), 
 			allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), 
 			nil, ZP);
 }
