@@ -17,7 +17,7 @@ char *buttons[] = {"exit", 0};
 Menu menu = { buttons };
 
 void 
-redraw() {
+redraw(void) {
 
 }
 
@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 		sysfatal("LoadImage hmap: %r");
 
 	/* Trigger a initial resize to paint initial color on screen */
-	setBackgroundColor(Dwhite);
+	setBackgroundColor(DWhite);
 
 	/* Draw image on screen */
 	draw(screen, screen->r, cmapim, nil, ZP);
