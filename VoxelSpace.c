@@ -52,7 +52,7 @@ loadImage(char *file, Image **i) {
 	return 0;
 }
 
-int
+void
 drawString(char *msg) {
 	string(screen, Pt(100, 100), allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), ZP, font, msg);
 }
