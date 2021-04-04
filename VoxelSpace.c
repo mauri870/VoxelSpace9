@@ -18,7 +18,16 @@ Menu menu = { buttons };
 
 void 
 render(void) {
-	draw(screen, screen->r, cmapim, nil, ZP);
+	Point p = ZP;
+	int height = 50;
+	int horizon = 120;
+	int scale_height = 120;
+	int distance = 300;
+	int screenwidth = windowDimensions.x;
+	int screenheight = windowDimensions.y;
+
+	fprintf("Screen x: %d, y: %d\n", screenwidth, screenheight);
+	// draw(screen, screen->r, cmapim, nil, ZP);
 }
 
 void 
