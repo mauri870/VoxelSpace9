@@ -18,7 +18,7 @@ Menu menu = { buttons };
 
 void 
 redraw(void) {
-
+	draw(screen, screen->r, cmapim, nil, ZP);
 }
 
 void 
@@ -75,9 +75,6 @@ main(int argc, char *argv[])
 	/* Trigger a initial resize to paint initial color on screen */
 	setBackgroundColor(DWhite);
 
-	/* Draw image on screen */
-	draw(screen, screen->r, cmapim, nil, ZP);
-
 	einit(Emouse);
 
     /* Timer for the event loop */
@@ -97,7 +94,7 @@ main(int argc, char *argv[])
 
         /* If the timer ticks... */
         if(e == timer)
-			fprint(2, "Tick...");
 			redraw();
+			fprint(2, "Tick...");
 	}
 }
