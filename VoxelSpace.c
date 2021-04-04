@@ -17,8 +17,13 @@ char *buttons[] = {"exit", 0};
 Menu menu = { buttons };
 
 void 
-redraw(void) {
+render(void) {
 	draw(screen, screen->r, cmapim, nil, ZP);
+}
+
+void 
+redraw(void) {
+	render();
 }
 
 void 
@@ -33,7 +38,7 @@ eresized(int new)
 	if(new && getwindow(display, Refnone) < 0)
 		sysfatal("can't reattach to window");
 
-	/* Store new screen coordinates */
+	/* Store new screen dimensions */
 	windowDimensions = Pt(Dx(screen->r), Dy(screen->r));
 
 	redraw();
@@ -100,6 +105,5 @@ main(int argc, char *argv[])
         /* If the timer ticks... */
         if(e == timer)
 			redraw();
-			fprint(2, "Tick...\n");
 	}
 }
