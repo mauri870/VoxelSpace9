@@ -9,6 +9,8 @@ Point windowDimensions;
 
 /* Colormap image file */
 Image *cmapim;
+/* Heightmap image file */
+Image *hmapim;
 
 /* Menus */
 char *buttons[] = {"exit", 0};
@@ -28,35 +30,44 @@ eresized(int new)
 			allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DWhite), nil, ZP);
 }
 
+int 
+loadImage(char *file, Image *i) {
+	int fd;
+	if((fd = open(file, OREAD)) < 0)
+		return -1;
+
+	if((i = readimage(display, fd, 0)) == nil)
+		return -1;
+
+	close(fd);
+	return 0;
+}
+
 void
 main(int argc, char *argv[])
 {
-	int fd;
 	Event ev;
 	int e, timer;
 
-	if (argc != 2) {
-		sysfatal("Please provide colormap file");
+	if (argc != 3) {
+		sysfatal("Please provide colormap and heightmap file");
 	}
-
-	/* Open colormap image file */
-	if((fd = open(argv[1], OREAD)) < 0)
-		sysfatal("open %s: %r", argv[1]);
 
 	/* Initiate graphics and mouse */
 	if(initdraw(nil, nil, "Voxel Space") < 0)
 		sysfatal("initdraw failed: %r");
+	
+	/* Load cmap and hmap images */
+	if (loadImage(argv[1], cmapim) < 0)
+		sysfatal("LoadImage cmap: %r");
+	if (loadImage(argv[2], hmapim) < 0)
+		sysfatal("LoadImage hmap: %r");
 
 	/* Trigger a initial resize to paint initial color on screen */
 	eresized(0);
 
-	/* Read colormap into an Image */
-	if((cmapim = readimage(display, fd, 0)) == nil)
-		sysfatal("readimage: %r");
-	close(fd);
-
 	/* Draw image on screen */
-	draw(screen, screen->r, cmapim, nil, ZP);
+	draw(screen, screen->r, hmapim, nil, ZP);
 
 	einit(Emouse);
 
