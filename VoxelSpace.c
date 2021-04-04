@@ -54,7 +54,7 @@ loadImage(char *file, Image **i) {
 
 int
 drawString(char *msg) {
-	string(screen, p, allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), nil, ZP), ZP, font, msg);
+	string(screen, Pt(100, 100), allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), ZP, font, msg);
 }
 
 void
@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 	einit(Emouse);
 
     /* Timer for the event loop */
-	timer = etimer(0, 33);
+	timer = etimer(0, 200);
 
     /* TODO: initialize everything here */
 
@@ -100,6 +100,6 @@ main(int argc, char *argv[])
         /* If the timer ticks... */
         if(e == timer)
 			redraw();
-			drawString("Tick...");
+			fprint(2, "Tick...\n");
 	}
 }
