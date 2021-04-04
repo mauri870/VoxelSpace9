@@ -16,6 +16,17 @@ Image *hmapim;
 char *buttons[] = {"exit", 0};
 Menu menu = { buttons };
 
+void 
+redraw() {
+
+}
+
+void 
+setBackgroundColor(ulong color) {
+	draw(screen, screen->r, 
+		allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, color), nil, ZP);
+}
+
 void
 eresized(int new)
 {
@@ -25,9 +36,7 @@ eresized(int new)
 	/* Store new screen coordinates */
 	windowDimensions = Pt(Dx(screen->r), Dy(screen->r));
 
-	/* Draw the background White */
-	draw(screen, insetrect(screen->r, 20), 
-			allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DWhite), nil, ZP);
+	redraw();
 }
 
 int 
@@ -64,7 +73,7 @@ main(int argc, char *argv[])
 		sysfatal("LoadImage hmap: %r");
 
 	/* Trigger a initial resize to paint initial color on screen */
-	eresized(0);
+	setBackgroundColor(Dwhite);
 
 	/* Draw image on screen */
 	draw(screen, screen->r, cmapim, nil, ZP);
@@ -88,6 +97,7 @@ main(int argc, char *argv[])
 
         /* If the timer ticks... */
         if(e == timer)
-            fprint(2, "Tick...");
+			fprint(2, "Tick...");
+			redraw();
 	}
 }
