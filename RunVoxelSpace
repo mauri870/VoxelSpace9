@@ -1,0 +1,7 @@
+#!/bin/rc -e
+
+png -c maps/C1W.png > /tmp/C1W.data
+
+mk clean && mk VoxelSpace
+
+./VoxelSpace /tmp/C1W.data
