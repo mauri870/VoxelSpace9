@@ -23,10 +23,9 @@ eresized(int new)
 	/* Store new screen coordinates */
 	windowDimensions = Pt(Dx(screen->r), Dy(screen->r));
 
-	/* Draw the background Red */
+	/* Draw the background White */
 	draw(screen, insetrect(screen->r, 20), 
-			allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), 
-			nil, ZP);
+			allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DWhite), nil, ZP);
 }
 
 void
@@ -48,6 +47,9 @@ main(int argc, char *argv[])
 	if(initdraw(nil, nil, "Voxel Space") < 0)
 		sysfatal("initdraw failed: %r");
 
+	/* Trigger a initial resize to paint initial color on screen */
+	eresized(0);
+
 	/* Read colormap into an Image */
 	if((cmapim = readimage(display, fd, 0)) == nil)
 		sysfatal("readimage: %r");
@@ -60,9 +62,6 @@ main(int argc, char *argv[])
 
     /* Timer for the event loop */
 	timer = etimer(0, 200);
-
-    /* Trigger a initial resize to paint initial color on screen */
-	eresized(0);
 
     /* TODO: initialize everything here */
 
