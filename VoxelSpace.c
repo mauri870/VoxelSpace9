@@ -18,16 +18,50 @@ Menu menu = { buttons };
 
 void 
 render(void) {
-	Point p = ZP;
 	int height = 50;
+	int angle = 0;
 	int horizon = 120;
 	int scale_height = 120;
 	int distance = 300;
 	int screenwidth = windowDimensions.x;
 	int screenheight = windowDimensions.y;
+	int heightOnScreen;
 
-	fprintf(2, "Screen x: %d, y: %d\n", screenwidth, screenheight);
-	// draw(screen, screen->r, cmapim, nil, ZP);
+	double c, s, dz, z;
+	int ybuf[1024];
+
+	Point pleft, pright;
+	Point p = ZP;
+
+	s = sin(angle);
+	c = cos(angle);
+
+	for (int i = 0; i <= screenwidth; i++)
+		ybuf[i] = screenheight;
+
+	dz = 1.0;
+	z = 1.0;
+
+	while (z < (double) distance) {
+		pleft = Pt((-c * z - s * z) + p.x, ( s * z - c * z) + p.y);
+		pright = Pt((c * z - s * z) + p.x, ( -s * z - c * z) + p.y);
+
+		dx = (addpt(pright, pleft)).x / screenwidth;
+		dy = (subpt(pright, pleft)).x / screenwidth;
+
+		for (int i = 0; i <= screenwidth; i++) {
+			heightOnScreen = (int)((height - nrand(0, 255)) / z * scale_height + horizon);
+			// TODO: Draw vertical line
+			// draw(screen, screen->r, cmapim, nil, ZP);
+			if (heightOnScreen < ybuf[i])
+				ybuf[i] = heightOnScreen;
+			
+			pleft = addpt(pleft, Pt((int)dx, (int)dy))
+		}
+
+		z += dx;
+		dz += 0.2;
+	}
 }
 
 void 
@@ -91,7 +125,10 @@ main(int argc, char *argv[])
 	if (loadImage(argv[2], &hmapim) < 0)
 		sysfatal("LoadImage hmap: %r");
 
-	/* Trigger a initial resize to paint initial color on screen */
+	/* Trigger a initial resize */
+	eresized(0);
+
+	/* Paint initial color on screen */
 	setBackgroundColor(DWhite);
 
 	einit(Emouse);
