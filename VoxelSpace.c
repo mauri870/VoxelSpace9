@@ -26,7 +26,7 @@ render(void) {
 	int screenwidth = windowDimensions.x;
 	int screenheight = windowDimensions.y;
 
-	fprintf("Screen x: %d, y: %d\n", screenwidth, screenheight);
+	fprintf(2, "Screen x: %d, y: %d\n", screenwidth, screenheight);
 	// draw(screen, screen->r, cmapim, nil, ZP);
 }
 
