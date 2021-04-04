@@ -53,6 +53,9 @@ main(int argc, char *argv[])
 		sysfatal("readimage: %r");
 	close(fd);
 
+	/* Draw image on screen */
+	draw(screen, screen->r, cmapim, nil, ZP);
+
 	einit(Emouse);
 
     /* Timer for the event loop */
