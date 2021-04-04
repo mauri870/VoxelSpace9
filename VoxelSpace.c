@@ -7,13 +7,12 @@
 /* Window dimensions */
 Point windowDimensions;
 
+/* Colormap image file */
+Image *cmapim;
+
 /* Menus */
 char *buttons[] = {"exit", 0};
 Menu menu = { buttons };
-
-void VoxelSpace_init(void);
-void VoxelSpace_draw(void);
-void VoxelSpace_render(void);
 
 void
 eresized(int new)
@@ -30,18 +29,29 @@ eresized(int new)
 			nil, ZP);
 }
 
-
 void
 main(int argc, char *argv[])
 {
-	USED(argc, argv);
-
+	int fd;
 	Event ev;
 	int e, timer;
+
+	if (argc != 2) {
+		sysfatal("Please provide colormap file");
+	}
+
+	/* Open colormap image file */
+	if((fd = open(argv[1], OREAD)) < 0)
+		sysfatal("open %s: %r", argv[1]);
 
 	/* Initiate graphics and mouse */
 	if(initdraw(nil, nil, "Voxel Space") < 0)
 		sysfatal("initdraw failed: %r");
+
+	/* Read colormap into an Image */
+	if((cmapim = readimage(display, fd, 0)) == nil)
+		sysfatal("readimage: %r");
+	close(fd);
 
 	einit(Emouse);
 
