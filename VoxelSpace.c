@@ -27,7 +27,7 @@ render(void) {
 	int screenheight = windowDimensions.y;
 	int heightOnScreen;
 
-	double c, s, dz, z;
+	double c, s, dx, dy, dz, z;
 	int ybuf[1024];
 
 	Point pleft, pright;
@@ -50,13 +50,13 @@ render(void) {
 		dy = (subpt(pright, pleft)).x / screenwidth;
 
 		for (int i = 0; i <= screenwidth; i++) {
-			heightOnScreen = (int)((height - nrand(0, 255)) / z * scale_height + horizon);
+			heightOnScreen = (int)((height - nrand(255)) / z * scale_height + horizon);
 			// TODO: Draw vertical line
 			// draw(screen, screen->r, cmapim, nil, ZP);
 			if (heightOnScreen < ybuf[i])
 				ybuf[i] = heightOnScreen;
 			
-			pleft = addpt(pleft, Pt((int)dx, (int)dy))
+			pleft = addpt(pleft, Pt((int)dx, (int)dy));
 		}
 
 		z += dx;
