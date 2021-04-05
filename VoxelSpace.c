@@ -59,7 +59,7 @@ render(void) {
 			pleft = addpt(pleft, Pt((int)dx, (int)dy));
 		}
 
-		z += dx;
+		z += dz;
 		dz += 0.2;
 	}
 }
@@ -105,6 +105,12 @@ drawString(char *msg) {
 	string(screen, Pt(100, 100), allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), ZP, font, msg);
 }
 
+void 
+_images_cleanup(void) {
+	freeimage(cmapim);
+	freeimage(hmapim);
+}
+
 void
 main(int argc, char *argv[])
 {
@@ -125,6 +131,9 @@ main(int argc, char *argv[])
 	if (loadImage(argv[2], &hmapim) < 0)
 		sysfatal("LoadImage hmap: %r");
 
+	/* cleanup images */
+	atexit(_images_cleanup);
+
 	/* Trigger a initial resize */
 	eresized(0);
 
@@ -136,7 +145,7 @@ main(int argc, char *argv[])
     /* Timer for the event loop */
 	timer = etimer(0, 200);
 
-    /* TODO: initialize everything here */
+	/* TODO: initialize everything here */
 
 	/* Main event loop */
 	for(;;)
@@ -149,7 +158,7 @@ main(int argc, char *argv[])
 			(emenuhit(3, &ev.mouse, &menu) == 0)) exits(nil);
 
         /* If the timer ticks... */
-        if(e == timer)
+		if(e == timer)
 			redraw();
 	}
 }
