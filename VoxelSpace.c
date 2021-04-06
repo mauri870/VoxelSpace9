@@ -59,11 +59,11 @@ render(void) {
 		dx = (pright.x - pleft.x) / screenwidth;
 		dy = (pright.y - pleft.y) / screenwidth;
 
-		pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
-		unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
-		unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
-
 		for (int i = 0; i < screenwidth; i++) {
+			pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
+			unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
+			unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
+
 			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
 			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, cmap2rgb(cmapc[0]));
 
