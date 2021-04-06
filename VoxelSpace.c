@@ -47,8 +47,14 @@ render(void) {
 	z = 1.0;
 
 	while (z < (double) distance) {
-		pleft = Pt((-c * z - s * z) + p.x, ( s * z - c * z) + p.y);
-		pright = Pt((c * z - s * z) + p.x, ( -s * z - c * z) + p.y);
+		pleft = Pt(
+			(-c * z - s * z) + p.x, 
+			( s * z - c * z) + p.y
+		);
+		pright = Pt(
+			(c * z - s * z) + p.x, 
+			( -s * z - c * z) + p.y
+		);
 
 		dx = (pright.x - pleft.x) / screenwidth;
 		dy = (pright.y - pleft.y) / screenwidth;
@@ -57,7 +63,7 @@ render(void) {
 		unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
 		unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
 
-		for (int i = 0; i <= screenwidth; i++) {
+		for (int i = 0; i < screenwidth; i++) {
 			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
 			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (cmap2rgb(cmapc[0])<<8)+0xFF);
 
