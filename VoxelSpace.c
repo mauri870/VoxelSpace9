@@ -29,11 +29,12 @@ render(void) {
 
 	double c, s, dx, dy, dz, z;
 	int ybuf[1024];
-	uchar hmapc;
-	uchar cmapc;
+	uchar hmapc[16]; // not sure about the size here
+	uchar cmapc[16]; // not sure about the size here
 
 	Point pleft, pright;
 	Point p = ZP;
+	Image *cim;
 
 	s = sin(angle);
 	c = cos(angle);
@@ -53,18 +54,19 @@ render(void) {
 
 		for (int i = 0; i <= screenwidth; i++) {
 			Rectangle pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
-			unloadimage(hmapim, pixelRect, &hmapc, 1);
-			unloadimage(hmapim, pixelRect, &cmapc, 1);
-			heightOnScreen = (int)((height - hmapc) / z * scale_height + horizon);
-			Image cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (int) cmapim);
+			unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
+			unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
+			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
+			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (int) cmapc[0]);
 
 			Rectangle drawRect = screen->r;
-			drawrect.min.x += i;
+			drawRect.min.x += i;
 			drawRect.min.y += ybuf[i];
-			drawRect.max.x = drawrect.min.x + 1;
+			drawRect.max.x = drawRect.min.x + 1;
 			drawRect.max.y += heightOnScreen;
 
 			draw(screen, drawRect, cim, nil, ZP);
+
 			if (heightOnScreen < ybuf[i])
 				ybuf[i] = heightOnScreen;
 			
