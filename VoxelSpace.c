@@ -47,7 +47,7 @@ render(void) {
 		pright = Pt((c * z - s * z) + p.x, ( -s * z - c * z) + p.y);
 
 		dx = (addpt(pright, pleft)).x / screenwidth;
-		dy = (subpt(pright, pleft)).x / screenwidth;
+		dy = (subpt(pright, pleft)).y / screenwidth;
 
 		for (int i = 0; i <= screenwidth; i++) {
 			heightOnScreen = (int)((height - nrand(255)) / z * scale_height + horizon);
