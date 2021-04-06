@@ -98,7 +98,7 @@ void render(void) {
 	}
 }
 
-void drawBackground() {
+void drawBackground(void) {
 	draw(screen, screen->r,
 	     allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1,
 			backgroundColor),
