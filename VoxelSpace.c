@@ -146,6 +146,8 @@ void main(int argc, char *argv[]) {
 	Event ev;
 	int e, timer;
 
+	backgroundColor = cmap2rgb(170);
+
 	if (argc != 3) {
 		sysfatal("Please provide colormap and heightmap file");
 	}
