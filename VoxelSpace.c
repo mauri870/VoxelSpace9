@@ -1,142 +1,132 @@
-#include <u.h>
-#include <libc.h>
-#include <stdio.h>
 #include <draw.h>
 #include <event.h>
-
-/* Window dimensions */
-Point windowDimensions;
+#include <libc.h>
+#include <stdio.h>
+#include <u.h>
 
 /* Colormap image file */
 Image *cmapim;
 /* Heightmap image file */
 Image *hmapim;
 
+int screenwidth = 800;
+int screenheight = 600;
+
+int px = 800;
+int py = 500;
+double pd = 1.7;
+int backgroundColor;
+
 /* Menus */
 char *buttons[] = {"exit", 0};
-Menu menu = { buttons };
+Menu menu = {buttons};
 
-void 
-render(void) {
-	int height = 50;
-	int angle = 0;
-	int horizon = 120;
-	int scale_height = 120;
-	int distance = 300;
-	int screenwidth = windowDimensions.x;
-	int screenheight = windowDimensions.y;
-	int heightOnScreen;
+int getColorFromImage(Image *im, Point p) {
+	uchar data[1];
+	int ret = unloadimage(im, Rect(p.x, p.y, p.x + 1, p.y + 1), data,
+			      sizeof data);
+	if (ret < 0) return -1;
+	return cmap2rgb(data[0]);
+}
 
-	double c, s, dx, dy, dz, z;
-	int ybuf[1024];
-	uchar hmapc[1]; // not sure about the size here
-	uchar cmapc[1]; // not sure about the size here
-
-	Point pleft, pright;
-	Point p = ZP;
+void drawVerticalLine(int x, int ytop, int ybottom, ulong color) {
 	Image *cim;
-	Rectangle pixelRect, drawRect;
+	Rectangle r;
 
-	s = sin(angle);
-	c = cos(angle);
+	if (ytop < 0) ytop = 0;
+	if (ytop > ybottom) return;
 
-	for (int i = 0; i <= screenwidth; i++)
-		ybuf[i] = screenheight;
+	cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, color);
 
-	dz = 1.0;
-	z = 1.0;
+	r = screen->r;
+	r.min.x += x;
+	r.min.y += (ybottom - ytop);
+	r.max.x = r.min.x + 1;
+	r.max.y = ybottom;
 
-	while (z < (double) distance) {
-		pleft = Pt(
-			(-c * z - s * z) + p.x, 
-			( s * z - c * z) + p.y
-		);
-		pright = Pt(
-			(c * z - s * z) + p.x, 
-			( -s * z - c * z) + p.y
-		);
+	draw(screen, r, cim, nil, ZP);
+	freeimage(cim);
+}
 
-		dx = (pright.x - pleft.x) / screenwidth;
-		dy = (pright.y - pleft.y) / screenwidth;
+void render(void) {
+	int sx = 0;
+	for (double angle = -0.5; angle < 1; angle += 0.0035) {
+		int maxScreenHeight = screenheight;
+		double s = cos(pd + angle);
+		double c = sin(pd + angle);
 
-		for (int i = 0; i < screenwidth; i++) {
-			pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
-			unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
-			unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
+		for (int depth = 10; depth < 600; depth += 1) {
+			int hmx = (int)(px + depth * s);
+			int hmy = (int)(py + depth * c);
+			int mapWidth = Dx(cmapim->r);
+			if (hmx < 0 || hmy < 0 || hmx > mapWidth ||
+			    hmy > mapWidth)
+				continue;
 
-			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
-			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, cmap2rgb(cmapc[0]));
+			int height =
+			    getColorFromImage(hmapim, Pt(hmx, hmy)) & 255;
+			int color = getColorFromImage(cmapim, Pt(hmx, hmy));
 
-			drawRect = screen->r;
-			drawRect.min.x += i;
-			drawRect.min.y += ybuf[i];
-			drawRect.max.x = drawRect.min.x + 1;
-			drawRect.max.y += heightOnScreen;
+			double sy = 120 * (300 - height) / depth;
+			if (sy > maxScreenHeight) continue;
 
-			draw(screen, drawRect, cim, nil, ZP);
-
-			if (heightOnScreen < ybuf[i])
-				ybuf[i] = heightOnScreen;
-			
-			pleft = addpt(pleft, Pt((int)dx, (int)dy));
-			freeimage(cim);
+			for (int y = (int)sy; y <= maxScreenHeight; y++) {
+				if (y < 0 || sx > screenwidth ||
+				    y > screenheight)
+					continue;
+				paintRgb(sx, y, color);
+			}
+			maxScreenHeight = (int)sy;
 		}
-
-		z += dz;
-		dz += 0.2;
+		sx++;
 	}
 }
 
-void 
-redraw(void) {
+void drawBackground() {
+	draw(screen, screen->r,
+	     allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1,
+			backgroundColor),
+	     nil, ZP);
+}
+
+void redraw(void) {
+	drawBackground();
 	render();
+
+	px += 2 * cos(pd);
+	py += 2 * sin(pd);
+	pd += 0.01;
 }
 
-void 
-setBackgroundColor(ulong color) {
-	draw(screen, screen->r, 
-		allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, color), nil, ZP);
-}
-
-void
-eresized(int new)
-{
-	if(new && getwindow(display, Refnone) < 0)
+void eresized(int new) {
+	if (new &&getwindow(display, Refnone) < 0)
 		sysfatal("can't reattach to window");
-
-	/* Store new screen dimensions */
-	windowDimensions = Pt(Dx(screen->r), Dy(screen->r));
 
 	redraw();
 }
 
-int 
-loadImage(char *file, Image **i) {
+int loadImage(char *file, Image **i) {
 	int fd;
-	if((fd = open(file, OREAD)) < 0)
-		return -1;
+	if ((fd = open(file, OREAD)) < 0) return -1;
 
-	if((*i = readimage(display, fd, 0)) == nil)
-		return -1;
+	if ((*i = readimage(display, fd, 0)) == nil) return -1;
 
 	close(fd);
 	return 0;
 }
 
-void
-drawString(char *msg) {
-	string(screen, Pt(100, 100), allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), ZP, font, msg);
+void drawString(char *msg) {
+	string(screen, Pt(100, 100),
+	       allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), ZP,
+	       font, msg);
 }
 
-void 
-_images_cleanup(void) {
+void _images_cleanup(void) {
 	freeimage(cmapim);
 	freeimage(hmapim);
 }
 
-void
-main(int argc, char *argv[])
-{
+void main(int argc, char *argv[]) {
 	Event ev;
 	int e, timer;
 
@@ -145,14 +135,12 @@ main(int argc, char *argv[])
 	}
 
 	/* Initiate graphics and mouse */
-	if(initdraw(nil, nil, "Voxel Space") < 0)
+	if (initdraw(nil, nil, "Voxel Space") < 0)
 		sysfatal("initdraw failed: %r");
-	
+
 	/* Load cmap and hmap images */
-	if (loadImage(argv[1], &cmapim) < 0)
-		sysfatal("LoadImage cmap: %r");
-	if (loadImage(argv[2], &hmapim) < 0)
-		sysfatal("LoadImage hmap: %r");
+	if (loadImage(argv[1], &cmapim) < 0) sysfatal("LoadImage cmap: %r");
+	if (loadImage(argv[2], &hmapim) < 0) sysfatal("LoadImage hmap: %r");
 
 	/* cleanup images */
 	atexit(_images_cleanup);
@@ -160,28 +148,23 @@ main(int argc, char *argv[])
 	/* Trigger a initial resize */
 	eresized(0);
 
-	/* Paint initial color on screen */
-	setBackgroundColor(DWhite);
+	drawBackground();
 
 	einit(Emouse);
 
-    /* Timer for the event loop */
+	/* Timer for the event loop */
 	timer = etimer(0, 200);
 
-	/* TODO: initialize everything here */
-
 	/* Main event loop */
-	for(;;)
-	{
+	for (;;) {
 		e = event(&ev);
 
 		/* Check if user select the exit option from menu context */
-		if( (e == Emouse) &&
-			(ev.mouse.buttons & 4) && 
-			(emenuhit(3, &ev.mouse, &menu) == 0)) exits(nil);
+		if ((e == Emouse) && (ev.mouse.buttons & 4) &&
+		    (emenuhit(3, &ev.mouse, &menu) == 0))
+			exits(nil);
 
-        /* If the timer ticks... */
-		if(e == timer)
-			redraw();
+		/* If the timer ticks... */
+		if (e == timer) redraw();
 	}
 }
