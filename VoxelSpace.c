@@ -29,8 +29,8 @@ render(void) {
 
 	double c, s, dx, dy, dz, z;
 	int ybuf[1024];
-	uchar hmapc[16]; // not sure about the size here
-	uchar cmapc[16]; // not sure about the size here
+	uchar hmapc[1]; // not sure about the size here
+	uchar cmapc[1]; // not sure about the size here
 
 	Point pleft, pright;
 	Point p = ZP;
@@ -57,7 +57,7 @@ render(void) {
 			unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
 			unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
 			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
-			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (int) cmapc[0]);
+			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (cmap2rgb(cmapc)<<8)+0xFF);
 
 			Rectangle drawRect = screen->r;
 			drawRect.min.x += i;
