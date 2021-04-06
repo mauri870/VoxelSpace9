@@ -57,7 +57,7 @@ render(void) {
 			unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
 			unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
 			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
-			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (cmap2rgb(cmapc)<<8)+0xFF);
+			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (cmap2rgb(cmapc[0])<<8)+0xFF);
 
 			Rectangle drawRect = screen->r;
 			drawRect.min.x += i;
