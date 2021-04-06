@@ -65,13 +65,13 @@ render(void) {
 
 		for (int i = 0; i < screenwidth; i++) {
 			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
-			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (cmap2rgb(cmapc[0])<<8)+0xFF);
+			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, cmap2rgb(cmapc[0]));
 
 			drawRect = screen->r;
 			drawRect.min.x += i;
-			drawRect.min.y += heightOnScreen;
+			drawRect.min.y += ybuf[i];
 			drawRect.max.x = drawRect.min.x + 1;
-			drawRect.max.y += ybuf[i];
+			drawRect.max.y += heightOnScreen;
 
 			draw(screen, drawRect, cim, nil, ZP);
 
@@ -79,6 +79,7 @@ render(void) {
 				ybuf[i] = heightOnScreen;
 			
 			pleft = addpt(pleft, Pt((int)dx, (int)dy));
+			freeimage(cim);
 		}
 
 		z += dz;
