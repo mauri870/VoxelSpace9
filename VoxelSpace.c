@@ -35,6 +35,7 @@ render(void) {
 	Point pleft, pright;
 	Point p = ZP;
 	Image *cim;
+	Rectangle pixelRect, drawRect;
 
 	s = sin(angle);
 	c = cos(angle);
@@ -49,21 +50,22 @@ render(void) {
 		pleft = Pt((-c * z - s * z) + p.x, ( s * z - c * z) + p.y);
 		pright = Pt((c * z - s * z) + p.x, ( -s * z - c * z) + p.y);
 
-		dx = (addpt(pright, pleft)).x / screenwidth;
-		dy = (subpt(pright, pleft)).y / screenwidth;
+		dx = (pright.x - pleft.x) / screenwidth;
+		dy = (pright.y - pleft.y) / screenwidth;
+
+		pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
+		unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
+		unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
 
 		for (int i = 0; i <= screenwidth; i++) {
-			Rectangle pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
-			unloadimage(hmapim, pixelRect, hmapc, sizeof hmapc);
-			unloadimage(cmapim, pixelRect, cmapc, sizeof cmapc);
 			heightOnScreen = (int)((height - hmapc[0]) / z * scale_height + horizon);
 			cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (cmap2rgb(cmapc[0])<<8)+0xFF);
 
-			Rectangle drawRect = screen->r;
+			drawRect = screen->r;
 			drawRect.min.x += i;
-			drawRect.min.y += ybuf[i];
+			drawRect.min.y += heightOnScreen;
 			drawRect.max.x = drawRect.min.x + 1;
-			drawRect.max.y += heightOnScreen;
+			drawRect.max.y += ybuf[i];
 
 			draw(screen, drawRect, cim, nil, ZP);
 
