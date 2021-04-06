@@ -29,6 +29,22 @@ int getColorFromImage(Image *im, Point p) {
 	return cmap2rgb(data[0]);
 }
 
+void paintRgb(int x, int y, int color) {
+	Image *cim;
+	Rectangle r;
+
+	cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, color);
+
+	r = screen->r;
+	r.min.x += x;
+	r.min.y += y;
+	r.max.x = r.min.x + 1;
+	r.max.y = r.min.y + 1;
+
+	draw(screen, r, cim, nil, ZP);
+	freeimage(cim);
+}
+
 void drawVerticalLine(int x, int ytop, int ybottom, ulong color) {
 	Image *cim;
 	Rectangle r;
