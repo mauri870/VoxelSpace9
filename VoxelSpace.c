@@ -29,6 +29,8 @@ render(void) {
 
 	double c, s, dx, dy, dz, z;
 	int ybuf[1024];
+	uchar hmapc;
+	uchar cmapc;
 
 	Point pleft, pright;
 	Point p = ZP;
@@ -50,9 +52,19 @@ render(void) {
 		dy = (subpt(pright, pleft)).y / screenwidth;
 
 		for (int i = 0; i <= screenwidth; i++) {
-			heightOnScreen = (int)((height - nrand(255)) / z * scale_height + horizon);
-			// TODO: Draw vertical line
-			// draw(screen, screen->r, cmapim, nil, ZP);
+			Rectangle pixelRect = Rect(pleft.x, pleft.y, pleft.x + 1, pleft.y + 1);
+			unloadimage(hmapim, pixelRect, &hmapc, 1);
+			unloadimage(hmapim, pixelRect, &cmapc, 1);
+			heightOnScreen = (int)((height - hmapc) / z * scale_height + horizon);
+			Image cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, (int) cmapim);
+
+			Rectangle drawRect = screen->r;
+			drawrect.min.x += i;
+			drawRect.min.y += ybuf[i];
+			drawRect.max.x = drawrect.min.x + 1;
+			drawRect.max.y += heightOnScreen;
+
+			draw(screen, drawRect, cim, nil, ZP);
 			if (heightOnScreen < ybuf[i])
 				ybuf[i] = heightOnScreen;
 			
