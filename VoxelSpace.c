@@ -35,9 +35,9 @@ int getColorFromImage(Memimage *im, Point p) {
 		return cmap2rgb(data[0]);
 	
 	/* Color map image has chan r8r8r8 but data is actually b g r */
-	color | (data[2] & 255) << 24;
-	color | (data[1] & 255) << 16;
-	color | (data[0] & 255) << 8;
+	color |= (data[2] & 255) << 24;
+	color |= (data[1] & 255) << 16;
+	color |= (data[0] & 255) << 8;
 
 	return color;
 }
