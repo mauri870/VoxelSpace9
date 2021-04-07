@@ -32,7 +32,7 @@ int getColorFromImage(Memimage *im, Point p) {
 
 	/* Height map has chan k8 */
 	if (ret == 1)
-		return cmap2rgb(data[0]);
+		return data[0];
 	
 	/* Color map image has chan r8r8r8 but data is actually b g r */
 	color |= (data[2] & 255) << 24;
@@ -109,7 +109,7 @@ void render(void) {
 		for (int depth = 10; depth < 600; depth += 1) {
 			int hmx = (int)(px + depth * s);
 			int hmy = (int)(py + depth * c);
-			int mapWidth = Dx(cmapim->r);
+			int mapWidth = Dx(cmapim->r) - 1;
 			if (hmx < 0 || hmy < 0 || hmx > mapWidth ||
 			    hmy > mapWidth)
 				continue;
@@ -122,8 +122,8 @@ void render(void) {
 			if (sy > maxScreenHeight) continue;
 
 			for (int y = (int)sy; y <= maxScreenHeight; y++) {
-				if (y < 0 || sx > Dx(screen->r) ||
-				    y > Dy(screen->r))
+				if (y < 0 || sx > Dx(screen->r) - 1 ||
+				    y > Dy(screen->r) - 1 )
 					continue;
 				paintRgb(frame, sx, y, color);
 			}
