@@ -1,9 +1,9 @@
-#include <u.h>
-#include <libc.h>
-#include <stdio.h>
 #include <draw.h>
 #include <event.h>
+#include <libc.h>
 #include <memdraw.h>
+#include <stdio.h>
+#include <u.h>
 
 /* Colormap image file */
 Memimage *cmapim;
@@ -27,14 +27,13 @@ int getColorFromImage(Memimage *im, Point p) {
 	int color;
 
 	int ret = unloadmemimage(im, Rect(p.x, p.y, p.x + 1, p.y + 1), data,
-			      sizeof data);
+				 sizeof data);
 	if (ret < 0) return -1;
 
 	/* Height map has chan k8 */
-	if (ret == 1)
-		return data[0];
-	
-	/* Color map image has chan r8r8r8 but data is actually b g r */
+	if (ret == 1) return data[0];
+
+	/* Color map image has chan r8g8b8 but data is actually b g r */
 	color |= (data[2] & 255) << 24;
 	color |= (data[1] & 255) << 16;
 	color |= (data[0] & 255) << 8;
@@ -59,7 +58,8 @@ void paintRgb(Memimage *frame, int x, int y, int color) {
 	freememimage(mi);
 }
 
-void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom, int color) {
+void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom,
+		      int color) {
 	Memimage *mi;
 	Rectangle r;
 
@@ -84,11 +84,10 @@ int addFog(int color, int depth) {
 	int g = (color >> 16) & 255;
 	int b = (color >> 8) & 255;
 	double p = 0.0;
-	if (depth > 100)
-		p = (depth - 100) / 500.0;
-	r = (int) (r + (150 - r) * p);
-	g = (int) (g + (170 - g) * p);
-	b = (int) (b + (170 - b) * p);
+	if (depth > 100) p = (depth - 100) / 500.0;
+	r = (int)(r + (150 - r) * p);
+	g = (int)(g + (170 - g) * p);
+	b = (int)(b + (170 - b) * p);
 	return (r << 24) + (g << 16) + (b << 8);
 }
 
@@ -116,14 +115,15 @@ void render(void) {
 
 			int height =
 			    getColorFromImage(hmapim, Pt(hmx, hmy)) & 255;
-			int color = addFog(getColorFromImage(cmapim, Pt(hmx, hmy)), depth);
+			int color = addFog(
+			    getColorFromImage(cmapim, Pt(hmx, hmy)), depth);
 
 			double sy = 120 * (300 - height) / depth;
 			if (sy > maxScreenHeight) continue;
 
 			for (int y = (int)sy; y <= maxScreenHeight; y++) {
 				if (y < 0 || sx > Dx(screen->r) - 1 ||
-				    y > Dy(screen->r) - 1 )
+				    y > Dy(screen->r) - 1)
 					continue;
 				paintRgb(frame, sx, y, color);
 			}
@@ -186,7 +186,6 @@ void main(int argc, char *argv[]) {
 	if (argc != 3) {
 		sysfatal("Please provide colormap and heightmap file");
 	}
-
 
 	memimageinit();
 
