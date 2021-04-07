@@ -111,7 +111,6 @@ void render(void) {
 	bits = malloc(nbits);
 	unloadmemimage(frame, frame->r, bits, nbits);
 	loadimage(screen, screen->r, bits, nbits);
-	flushimage(display, 0);
 
 	free(bits);
 	freememimage(frame);
