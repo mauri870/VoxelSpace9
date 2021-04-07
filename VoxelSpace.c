@@ -54,7 +54,7 @@ void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom, int color) 
 	if (ytop < 0) ytop = 0;
 	if (ytop > ybottom) return;
 
-	mi = allocmemimage(display, Rect(0, 0, 1, 1), frame->chan);
+	mi = allocmemimage(Rect(0, 0, 1, 1), frame->chan);
 	memfillcolor(mi, color);
 
 	r = frame->r;
@@ -176,8 +176,6 @@ void main(int argc, char *argv[]) {
 
 	/* Trigger a initial resize */
 	eresized(0);
-
-	drawBackground();
 
 	einit(Emouse);
 
