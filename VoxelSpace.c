@@ -16,7 +16,7 @@ int screenheight = 300;
 int px = 800;
 int py = 500;
 double pd = 1.7;
-int backgroundColor = (220 << 24) + (219 << 16) + (223 << 8) + 0.3;
+int backgroundColor = (144 << 24) + (144 << 16) + (224 << 8);
 
 /* Menus */
 char *buttons[] = {"exit", 0};
