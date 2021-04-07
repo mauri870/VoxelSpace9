@@ -123,7 +123,7 @@ void render(void) {
 
 			for (int y = (int)sy; y <= maxScreenHeight; y++) {
 				if (y < 0 || sx > Dx(screen->r) ||
-				    y > Dy(Screen->r))
+				    y > Dy(screen->r))
 					continue;
 				paintRgb(frame, sx, y, color);
 			}
