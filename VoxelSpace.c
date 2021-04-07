@@ -16,7 +16,8 @@ int screenheight = 300;
 int px = 800;
 int py = 500;
 double pd = 1.7;
-int backgroundColor = (144 << 24) + (144 << 16) + (224 << 8);
+int bgColor = (144 << 24) + (144 << 16) + (224 << 8);
+Image *bgim;
 
 /* Menus */
 char *buttons[] = {"exit", 0};
@@ -141,7 +142,12 @@ void render(void) {
 	}
 }
 
+void drawBackground(void) {
+	draw(screen, screen->r, bgim, nil, ZP);
+}
+
 void redraw(void) {
+	drawBackground();
 	render();
 
 	px += 2 * cos(pd);
@@ -150,7 +156,7 @@ void redraw(void) {
 }
 
 void eresized(int new) {
-	if (new &&getwindow(display, Refnone) < 0)
+	if (new && getwindow(display, Refnone) < 0)
 		sysfatal("can't reattach to window");
 
 	redraw();
@@ -194,6 +200,9 @@ void main(int argc, char *argv[]) {
 	/* Load cmap and hmap images */
 	if (loadImage(argv[1], &cmapim) < 0) sysfatal("LoadImage cmap: %r");
 	if (loadImage(argv[2], &hmapim) < 0) sysfatal("LoadImage hmap: %r");
+
+	/* Allocate background color only once */
+	bgim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, bgColor);
 
 	/* cleanup images */
 	atexit(_images_cleanup);
