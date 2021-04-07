@@ -58,6 +58,21 @@ void paintRgb(Memimage *frame, int x, int y, int color) {
 	freememimage(mi);
 }
 
+void writePixel(Image *dst, Point p, int color) {
+	Rectangle r;
+
+	r = dst->r;
+	r.min = addpt(r.min, p);
+	r.max = addpt(r.min, Pt(1, 1));
+
+	// FIXME: This assumes color to be 24 bit RGB
+	uchar bits[4];
+	bits[2] = color >> 24;
+	bits[1] = color >> 16;
+	bits[0] = color >> 8;
+	loadimage(dst, r, bits, sizeof bits);
+}
+
 void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom,
 		      int color) {
 	Memimage *mi;
@@ -92,13 +107,6 @@ int addFog(int color, int depth) {
 }
 
 void render(void) {
-	Memimage *frame;
-	uchar *bits;
-	int nbits;
-
-	frame = allocmemimage(screen->r, screen->chan);
-	memfillcolor(frame, backgroundColor);
-
 	int sx = 0;
 	for (double angle = -0.5; angle < 1; angle += 0.0035) {
 		int maxScreenHeight = screenheight;
@@ -125,20 +133,12 @@ void render(void) {
 				if (y < 0 || sx > Dx(screen->r) - 1 ||
 				    y > Dy(screen->r) - 1)
 					continue;
-				paintRgb(frame, sx, y, color);
+				writePixel(screen, Pt(sx, y), color);
 			}
 			maxScreenHeight = (int)sy;
 		}
 		sx++;
 	}
-
-	nbits = bytesperline(frame->r, frame->depth) * Dy(frame->r);
-	bits = malloc(nbits);
-	unloadmemimage(frame, frame->r, bits, nbits);
-	loadimage(screen, screen->r, bits, nbits);
-
-	free(bits);
-	freememimage(frame);
 }
 
 void redraw(void) {
