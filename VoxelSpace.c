@@ -16,7 +16,7 @@ int screenheight = 300;
 int px = 800;
 int py = 500;
 double pd = 1.7;
-int backgroundColor;
+int backgroundColor = (220 << 24) + (219 << 16) + (223 << 8) + 0.3;
 
 /* Menus */
 char *buttons[] = {"exit", 0};
@@ -180,8 +180,6 @@ void _images_cleanup(void) {
 void main(int argc, char *argv[]) {
 	Event ev;
 	int e, timer;
-
-	backgroundColor = cmap2rgb(170);
 
 	if (argc != 3) {
 		sysfatal("Please provide colormap and heightmap file");
