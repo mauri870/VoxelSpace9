@@ -1,7 +1,7 @@
 #!/bin/rc -e
 
-png -c maps/C1W.png > /tmp/C1W.data
-png -c maps/D1.png > /tmp/D1.data
+png -tc maps/C1W.png > /tmp/C1W.data
+png -tc maps/D1.png > /tmp/D1.data
 
 mk clean && mk VoxelSpace
 
