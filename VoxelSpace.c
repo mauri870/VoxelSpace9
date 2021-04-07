@@ -74,25 +74,24 @@ void writePixel(Image *dst, Point p, int color) {
 	loadimage(dst, r, bits, sizeof bits);
 }
 
-void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom,
-		      int color) {
-	Memimage *mi;
+void drawVerticalLine(Image *dst, int x, int ytop, int ybottom, int color) {
 	Rectangle r;
 
 	if (ytop < 0) ytop = 0;
 	if (ytop > ybottom) return;
 
-	mi = allocmemimage(Rect(0, 0, 1, 1), frame->chan);
-	memfillcolor(mi, color);
-
-	r = frame->r;
+	r = dst->r;
 	r.min.x += x;
 	r.min.y += (ybottom - ytop);
 	r.max.x = r.min.x + 1;
 	r.max.y = ybottom;
 
-	memimagedraw(frame, r, mi, ZP, nil, ZP, S);
-	freememimage(mi);
+	// FIXME: This assumes color to be 24 bit RGB
+	uchar bits[4];
+	bits[2] = color >> 24;
+	bits[1] = color >> 16;
+	bits[0] = color >> 8;
+	loadimage(dst, r, bits, sizeof bits);
 }
 
 int addFog(int color, int depth) {
@@ -108,38 +107,56 @@ int addFog(int color, int depth) {
 }
 
 void render(void) {
-	int sx = 0;
-	for (double angle = -0.5; angle < 1; angle += 0.0035) {
-		int maxScreenHeight = screenheight;
-		double s = cos(pd + angle);
-		double c = sin(pd + angle);
+	int mapwidthperiod = 1023;
+	int mapheightperiod = 1023;
+	int *hiddeny;
 
-		for (int depth = 10; depth < 600; depth += 1) {
-			int hmx = (int)(px + depth * s);
-			int hmy = (int)(py + depth * c);
-			int mapWidth = Dx(cmapim->r) - 1;
-			if (hmx < 0 || hmy < 0 || hmx > mapWidth ||
-			    hmy > mapWidth)
-				continue;
+	int screenwidth = Dx(screen->r);
+	int screenheight = Dy(screen->r);
+	int distance = 300;
+	int shift = 10;
+	int horizon = 100;
+	int height = 78;
 
-			int height =
-			    getColorFromImage(hmapim, Pt(hmx, hmy)) & 255;
-			int color = addFog(
-			    getColorFromImage(cmapim, Pt(hmx, hmy)), depth);
+	double sinang = sin(pd);
+	double cosang = cos(pd);
 
-			double sy = 120 * (300 - height) / depth;
-			if (sy > maxScreenHeight) continue;
+	hiddeny = malloc(screenwidth * sizeof(int));
+	for (int i = 0; i < screenwidth; i++)
+		hiddeny[i] = screenheight;
+	
+	double deltaz = 1.0;
 
-			for (int y = (int)sy; y <= maxScreenHeight; y++) {
-				if (y < 0 || sx > Dx(screen->r) - 1 ||
-				    y > Dy(screen->r) - 1)
-					continue;
-				writePixel(screen, Pt(sx, y), color);
-			}
-			maxScreenHeight = (int)sy;
-		}
-		sx++;
-	}
+	// Draw from front to back
+    for(int z = 1; z < distance; z+=deltaz)
+    {
+        // 90 degree field of view
+        int plx =  -cosang * z - sinang * z;
+        int ply =  sinang * z - cosang * z;
+        int prx =  cosang * z - sinang * z;
+        int pry =  -sinang * z - cosang * z;
+
+        double dx = (prx - plx) / screenwidth;
+        double dy = (pry - ply) / screenwidth;
+        plx += px;
+        ply += py;
+        double invz = 1. / z * 240.;
+        for(int i=0; i<screenwidth; i++)
+        {
+            // int mapoffset = ((floor(ply) & mapwidthperiod) << shift) + (floor(plx) & mapheightperiod);
+			int alt = getColorFromImage(hmapim, Pt(plx, ply)) & 255;
+			// TODO: not sure about this
+			int color = addFog(getColorFromImage(cmapim, Pt(plx, ply)), height);
+            int heightonscreen = (height - alt) * invz + horizon;
+            drawVerticalLine(screen, i, heightonscreen, hiddeny[i], color);
+            if (heightonscreen < hiddeny[i]) hiddeny[i] = heightonscreen;
+            plx += dx;
+            ply += dy;
+        }
+        deltaz += 0.005;
+    }
+
+	free(hiddeny);
 }
 
 void drawBackground(void) {
