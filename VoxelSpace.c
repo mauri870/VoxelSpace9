@@ -3,14 +3,15 @@
 #include <stdio.h>
 #include <draw.h>
 #include <event.h>
+#include <memdraw.h>
 
 /* Colormap image file */
-Image *cmapim;
+Memimage *cmapim;
 /* Heightmap image file */
-Image *hmapim;
+Memimage *hmapim;
 
-int screenwidth = 800;
-int screenheight = 600;
+int screenwidth = 400;
+int screenheight = 300;
 
 int px = 800;
 int py = 500;
@@ -21,52 +22,59 @@ int backgroundColor;
 char *buttons[] = {"exit", 0};
 Menu menu = {buttons};
 
-int getColorFromImage(Image *im, Point p) {
+int getColorFromImage(Memimage *im, Point p) {
 	uchar data[1];
-	int ret = unloadimage(im, Rect(p.x, p.y, p.x + 1, p.y + 1), data,
+	int ret = unloadmemimage(im, Rect(p.x, p.y, p.x + 1, p.y + 1), data,
 			      sizeof data);
 	if (ret < 0) return -1;
 	return cmap2rgb(data[0]);
 }
 
-void paintRgb(int x, int y, int color) {
-	Image *cim;
+void paintRgb(Memimage *frame, int x, int y, int color) {
+	Memimage *mi;
 	Rectangle r;
 
-	cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, color);
+	mi = allocmemimage(Rect(0, 0, 1, 1), frame->chan);
+	memfillcolor(mi, color);
 
-	r = screen->r;
+	r = frame->r;
 	r.min.x += x;
 	r.min.y += y;
 	r.max.x = r.min.x + 1;
 	r.max.y = r.min.y + 1;
 
-	draw(screen, r, cim, nil, ZP);
-	freeimage(cim);
-	flushimage(display, 1);
+	memimagedraw(frame, r, mi, ZP, nil, ZP, S);
+	freememimage(mi);
 }
 
-void drawVerticalLine(int x, int ytop, int ybottom, ulong color) {
-	Image *cim;
+void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom, int color) {
+	Memimage *mi;
 	Rectangle r;
 
 	if (ytop < 0) ytop = 0;
 	if (ytop > ybottom) return;
 
-	cim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, color);
+	mi = allocmemimage(display, Rect(0, 0, 1, 1), frame->chan);
+	memfillcolor(mi, color);
 
-	r = screen->r;
+	r = frame->r;
 	r.min.x += x;
 	r.min.y += (ybottom - ytop);
 	r.max.x = r.min.x + 1;
 	r.max.y = ybottom;
 
-	draw(screen, r, cim, nil, ZP);
-	freeimage(cim);
-	flushimage(display, 1);
+	memimagedraw(frame, r, mi, ZP, nil, ZP, S);
+	freememimage(mi);
 }
 
 void render(void) {
+	Memimage *frame;
+	uchar *bits;
+	int nbits;
+
+	frame = allocmemimage(screen->r, screen->chan);
+	memfillcolor(frame, backgroundColor);
+
 	int sx = 0;
 	for (double angle = -0.5; angle < 1; angle += 0.0035) {
 		int maxScreenHeight = screenheight;
@@ -92,23 +100,24 @@ void render(void) {
 				if (y < 0 || sx > screenwidth ||
 				    y > screenheight)
 					continue;
-				paintRgb(sx, y, color);
+				paintRgb(frame, sx, y, color);
 			}
 			maxScreenHeight = (int)sy;
 		}
 		sx++;
 	}
-}
 
-void drawBackground(void) {
-	draw(screen, screen->r,
-	     allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1,
-			backgroundColor),
-	     nil, ZP);
+	nbits = bytesperline(frame->r, frame->depth) * Dy(frame->r);
+	bits = malloc(nbits);
+	unloadmemimage(frame, frame->r, bits, nbits);
+	loadimage(screen, screen->r, bits, nbits);
+	flushimage(display, 0);
+
+	free(bits);
+	freememimage(frame);
 }
 
 void redraw(void) {
-	drawBackground();
 	render();
 
 	px += 2 * cos(pd);
@@ -123,11 +132,11 @@ void eresized(int new) {
 	redraw();
 }
 
-int loadImage(char *file, Image **i) {
+int loadImage(char *file, Memimage **i) {
 	int fd;
 	if ((fd = open(file, OREAD)) < 0) return -1;
 
-	if ((*i = readimage(display, fd, 0)) == nil) return -1;
+	if ((*i = readmemimage(fd)) == nil) return -1;
 
 	close(fd);
 	return 0;
@@ -140,8 +149,8 @@ void drawString(char *msg) {
 }
 
 void _images_cleanup(void) {
-	freeimage(cmapim);
-	freeimage(hmapim);
+	freememimage(cmapim);
+	freememimage(hmapim);
 }
 
 void main(int argc, char *argv[]) {
