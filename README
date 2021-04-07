@@ -3,10 +3,10 @@ Voxel Space in Plan9
 
 Voxel Space algorithm implemented in Plan9.
 
-About
+Installation
 -----
 
 Install git from https://github.com/oridb/git9 then
 
         % git/clone git://github.com/mauri870/VoxelSpace9.git
-        % mk
+        % RunVoxelSpace
