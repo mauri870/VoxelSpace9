@@ -43,6 +43,7 @@ void paintRgb(int x, int y, int color) {
 
 	draw(screen, r, cim, nil, ZP);
 	freeimage(cim);
+	flushimage(display, 1);
 }
 
 void drawVerticalLine(int x, int ytop, int ybottom, ulong color) {
@@ -62,6 +63,7 @@ void drawVerticalLine(int x, int ytop, int ybottom, ulong color) {
 
 	draw(screen, r, cim, nil, ZP);
 	freeimage(cim);
+	flushimage(display, 1);
 }
 
 void render(void) {
