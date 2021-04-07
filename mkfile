@@ -1,6 +1,6 @@
 </$objtype/mkfile
 
-ALL=demo
+ALL=VoxelSpace
 
 all:V: $ALL
 
