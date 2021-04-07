@@ -111,6 +111,7 @@ void render(void) {
 	bits = malloc(nbits);
 	unloadmemimage(frame, frame->r, bits, nbits);
 	loadimage(screen, screen->r, bits, nbits);
+	flushimage(display, 0);
 
 	free(bits);
 	freememimage(frame);
@@ -161,6 +162,9 @@ void main(int argc, char *argv[]) {
 	if (argc != 3) {
 		sysfatal("Please provide colormap and heightmap file");
 	}
+
+
+	memimageinit();
 
 	/* Initiate graphics and mouse */
 	if (initdraw(nil, nil, "Voxel Space") < 0)
