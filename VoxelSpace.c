@@ -5,10 +5,10 @@
 #include <event.h>
 #include <memdraw.h>
 
-/* Colormap image file */
-Memimage *cmapim;
-/* Heightmap image file */
-Memimage *hmapim;
+/* Colormap pixel data */
+int cmap[1024][1024];
+/* Heightmap pixel data */
+int hmap[1024][1024];
 
 int screenwidth = 400;
 int screenheight = 300;
@@ -23,7 +23,7 @@ Image *bgim;
 char *buttons[] = {"exit", 0};
 Menu menu = {buttons};
 
-int getColorFromImage(Memimage *im, Point p) {
+int getPixelColor(Memimage *im, Point p) {
 	uchar data[3];
 	int color;
 
@@ -35,7 +35,7 @@ int getColorFromImage(Memimage *im, Point p) {
 	if (ret == 1) return data[0];
 
 	/* Color map image has chan r8g8b8 but data is actually b g r */
-	color |= (data[2] & 255) << 24;
+	color = (data[2] & 255) << 24;
 	color |= (data[1] & 255) << 16;
 	color |= (data[0] & 255) << 8;
 
@@ -108,6 +108,7 @@ int addFog(int color, int depth) {
 }
 
 void render(void) {
+	Point p;
 	int sx = 0;
 	for (double angle = -0.5; angle < 1; angle += 0.0035) {
 		int maxScreenHeight = screenheight;
@@ -117,15 +118,13 @@ void render(void) {
 		for (int depth = 10; depth < 600; depth += 1) {
 			int hmx = (int)(px + depth * s);
 			int hmy = (int)(py + depth * c);
-			int mapWidth = Dx(cmapim->r) - 1;
+			int mapWidth = 1024 - 1;
 			if (hmx < 0 || hmy < 0 || hmx > mapWidth ||
 			    hmy > mapWidth)
 				continue;
 
-			int height =
-			    getColorFromImage(hmapim, Pt(hmx, hmy)) & 255;
-			int color = addFog(
-			    getColorFromImage(cmapim, Pt(hmx, hmy)), depth);
+			int height = hmap[hmx][hmy] & 255;
+			int color = addFog(cmap[hmx][hmy], depth);
 
 			double sy = 120 * (300 - height) / depth;
 			if (sy > maxScreenHeight) continue;
@@ -134,7 +133,9 @@ void render(void) {
 				if (y < 0 || sx > Dx(screen->r) - 1 ||
 				    y > Dy(screen->r) - 1)
 					continue;
-				writePixel(screen, Pt(sx, y), color);
+				p.x = sx;
+				p.y = y;
+				writePixel(screen, p, color);
 			}
 			maxScreenHeight = (int)sy;
 		}
@@ -162,11 +163,21 @@ void eresized(int new) {
 	redraw();
 }
 
-int loadImage(char *file, Memimage **i) {
+int loadImage(char *file, int buf[1024][1024]) {
+	Memimage *mi;
+	Point p;
 	int fd;
 	if ((fd = open(file, OREAD)) < 0) return -1;
 
-	if ((*i = readmemimage(fd)) == nil) return -1;
+	if ((mi = readmemimage(fd)) == nil) return -1;
+
+	for (int i = 0; i < 1024; i++) {
+		for (int j = 0; j < 1024; j++) {
+			p.x = i;
+			p.y = j;
+			buf[i][j] = getPixelColor(mi, p);
+		}
+	}
 
 	close(fd);
 	return 0;
@@ -179,8 +190,6 @@ void drawString(char *msg) {
 }
 
 void _images_cleanup(void) {
-	freememimage(cmapim);
-	freememimage(hmapim);
 }
 
 void main(int argc, char *argv[]) {
@@ -198,8 +207,8 @@ void main(int argc, char *argv[]) {
 		sysfatal("initdraw failed: %r");
 
 	/* Load cmap and hmap images */
-	if (loadImage(argv[1], &cmapim) < 0) sysfatal("LoadImage cmap: %r");
-	if (loadImage(argv[2], &hmapim) < 0) sysfatal("LoadImage hmap: %r");
+	if (loadImage(argv[1], cmap) < 0) sysfatal("LoadImage cmap: %r");
+	if (loadImage(argv[2], hmap) < 0) sysfatal("LoadImage hmap: %r");
 
 	/* Allocate background color only once */
 	bgim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, bgColor);
