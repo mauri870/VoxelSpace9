@@ -5,17 +5,19 @@
 #include <event.h>
 #include <memdraw.h>
 
-/* Colormap image file */
-Memimage *cmapim;
-/* Heightmap image file */
-Memimage *hmapim;
+#define IMSIZE 1024
+/* Colormap pixel data */
+int cmap[IMSIZE][IMSIZE];
+/* Heightmap pixel data */
+int hmap[IMSIZE][IMSIZE];
 
-int screenwidth = 400;
-int screenheight = 300;
+double camerax = 800;
+double cameray = 800;
+double cameraAngle = 0;
+int cameraHorizon = 120;
+int cameraDistance = 800;
+int cameraHeight = 150;
 
-int px = 800;
-int py = 500;
-double pd = 1.7;
 int bgColor = (144 << 24) + (144 << 16) + (224 << 8);
 Image *bgim;
 
@@ -23,7 +25,7 @@ Image *bgim;
 char *buttons[] = {"exit", 0};
 Menu menu = {buttons};
 
-int getColorFromImage(Memimage *im, Point p) {
+int getPixelColor(Memimage *im, Point p) {
 	uchar data[3];
 	int color;
 
@@ -35,7 +37,7 @@ int getColorFromImage(Memimage *im, Point p) {
 	if (ret == 1) return data[0];
 
 	/* Color map image has chan r8g8b8 but data is actually b g r */
-	color |= (data[2] & 255) << 24;
+	color = (data[2] & 255) << 24;
 	color |= (data[1] & 255) << 16;
 	color |= (data[0] & 255) << 8;
 
@@ -74,25 +76,16 @@ void writePixel(Image *dst, Point p, int color) {
 	loadimage(dst, r, bits, sizeof bits);
 }
 
-void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom,
+void drawVerticalLine(Image *dst, int x, int ytop, int ybottom,
 		      int color) {
-	Memimage *mi;
-	Rectangle r;
-
-	if (ytop < 0) ytop = 0;
+	if (ytop < 0) {
+		ytop = 0;
+	}
 	if (ytop > ybottom) return;
 
-	mi = allocmemimage(Rect(0, 0, 1, 1), frame->chan);
-	memfillcolor(mi, color);
-
-	r = frame->r;
-	r.min.x += x;
-	r.min.y += (ybottom - ytop);
-	r.max.x = r.min.x + 1;
-	r.max.y = ybottom;
-
-	memimagedraw(frame, r, mi, ZP, nil, ZP, S);
-	freememimage(mi);
+	for (int y = ytop; y < ybottom; y++) {
+		writePixel(dst, Pt(x, y), color);
+	}
 }
 
 int addFog(int color, int depth) {
@@ -107,39 +100,52 @@ int addFog(int color, int depth) {
 	return (r << 24) + (g << 16) + (b << 8);
 }
 
-void render(void) {
-	int sx = 0;
-	for (double angle = -0.5; angle < 1; angle += 0.0035) {
-		int maxScreenHeight = screenheight;
-		double s = cos(pd + angle);
-		double c = sin(pd + angle);
+void render(double px, double py, double deg, int height, int horizon, int scaleHeight, int distance, int screenWidth, int screenHeight) {
+	int *yBuffer;
 
-		for (int depth = 10; depth < 600; depth += 1) {
-			int hmx = (int)(px + depth * s);
-			int hmy = (int)(py + depth * c);
-			int mapWidth = Dx(cmapim->r) - 1;
-			if (hmx < 0 || hmy < 0 || hmx > mapWidth ||
-			    hmy > mapWidth)
-				continue;
+	yBuffer = malloc(screenWidth * sizeof(int));
+	for (int i = 0; i < screenWidth; i++)
+		yBuffer[i] = screenHeight;
 
-			int height =
-			    getColorFromImage(hmapim, Pt(hmx, hmy)) & 255;
-			int color = addFog(
-			    getColorFromImage(cmapim, Pt(hmx, hmy)), depth);
+	double s = sin(deg);
+	double c = cos(deg);
 
-			double sy = 120 * (300 - height) / depth;
-			if (sy > maxScreenHeight) continue;
+	double z = 1;
+	double dz = 1.0;
 
-			for (int y = (int)sy; y <= maxScreenHeight; y++) {
-				if (y < 0 || sx > Dx(screen->r) - 1 ||
-				    y > Dy(screen->r) - 1)
-					continue;
-				writePixel(screen, Pt(sx, y), color);
-			}
-			maxScreenHeight = (int)sy;
+	for (z = 1; z < distance; z += dz) {
+		double plx = -c * z - s * z;
+		double ply = s * z - c * z;
+
+		double prx = c * z - s * z;
+		double pry = -s * z - c * z;
+
+		double dx = (prx - plx) / screenWidth;
+		double dy = (pry - ply) / screenWidth;
+		plx += px;
+		ply += py;
+		double invz = 1. / z * 240;
+
+		for (int i = 0; i < screenWidth; i++) {
+			int offsetX = (int)plx & 1023;
+			int offsetY = (int)ply & 1023;
+
+			int heightOfHeightMap = hmap[offsetX][offsetY] & 255;
+			int heightOnScreen = (int) ((height - heightOfHeightMap) * invz + horizon);
+			int color = addFog(cmap[offsetX][offsetY], z);
+			drawVerticalLine(screen, i, heightOnScreen, yBuffer[i], color);
+
+			if (heightOnScreen < yBuffer[i])
+				yBuffer[i] = heightOnScreen;
+
+			plx += dx;
+			ply += dy;
 		}
-		sx++;
+
+		dz += 0.005;
 	}
+
+	free(yBuffer);
 }
 
 void drawBackground(void) {
@@ -148,11 +154,11 @@ void drawBackground(void) {
 
 void redraw(void) {
 	drawBackground();
-	render();
+	render(camerax, cameray, cameraAngle, cameraHeight, cameraHorizon, 120, cameraDistance, Dx(screen->r), Dy(screen->r));
 
-	px += 2 * cos(pd);
-	py += 2 * sin(pd);
-	pd += 0.01;
+	camerax += 2 * cos(cameraAngle);
+	cameray += 2 * sin(cameraAngle);
+	cameraAngle += 0.01;
 }
 
 void eresized(int new) {
@@ -162,11 +168,22 @@ void eresized(int new) {
 	redraw();
 }
 
-int loadImage(char *file, Memimage **i) {
+int loadImage(char *file, int buf[IMSIZE][IMSIZE]) {
+	Memimage *mi;
+	Point p;
 	int fd;
+
 	if ((fd = open(file, OREAD)) < 0) return -1;
 
-	if ((*i = readmemimage(fd)) == nil) return -1;
+	if ((mi = readmemimage(fd)) == nil) return -1;
+
+	for (int i = 0; i < IMSIZE; i++) {
+		for (int j = 0; j < IMSIZE; j++) {
+			p.x = i;
+			p.y = j;
+			buf[i][j] = getPixelColor(mi, p);
+		}
+	}
 
 	close(fd);
 	return 0;
@@ -178,18 +195,15 @@ void drawString(char *msg) {
 	       font, msg);
 }
 
-void _images_cleanup(void) {
-	freememimage(cmapim);
-	freememimage(hmapim);
+void _cleanup(void) {
 }
 
 void main(int argc, char *argv[]) {
 	Event ev;
 	int e, timer;
 
-	if (argc != 3) {
+	if (argc != 3)
 		sysfatal("Please provide colormap and heightmap file");
-	}
 
 	memimageinit();
 
@@ -198,14 +212,14 @@ void main(int argc, char *argv[]) {
 		sysfatal("initdraw failed: %r");
 
 	/* Load cmap and hmap images */
-	if (loadImage(argv[1], &cmapim) < 0) sysfatal("LoadImage cmap: %r");
-	if (loadImage(argv[2], &hmapim) < 0) sysfatal("LoadImage hmap: %r");
+	if (loadImage(argv[1], cmap) < 0) sysfatal("LoadImage cmap: %r");
+	if (loadImage(argv[2], hmap) < 0) sysfatal("LoadImage hmap: %r");
 
 	/* Allocate background color only once */
 	bgim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, bgColor);
 
 	/* cleanup images */
-	atexit(_images_cleanup);
+	atexit(_cleanup);
 
 	/* Trigger a initial resize */
 	eresized(0);
@@ -213,7 +227,7 @@ void main(int argc, char *argv[]) {
 	einit(Emouse);
 
 	/* Timer for the event loop */
-	timer = etimer(0, 200);
+	timer = etimer(0, 1000 / 30);
 
 	/* Main event loop */
 	for (;;) {
