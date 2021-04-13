@@ -150,12 +150,11 @@ void render(Memimage *frame, double px, double py, double deg, int height, int h
 }
 
 void drawBackground(Memimage *frame) {
-	// draw(screen, screen->r, bgim, nil, ZP);
 	memfillcolor(frame, bgColor);
 }
 
 void clearScreen(Memimage *frame) {
-	memfillcolor(frame, DNofill);
+	memfillcolor(frame, DTransparent);
 }
 
 void redraw(void) {
