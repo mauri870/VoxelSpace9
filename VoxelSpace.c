@@ -155,6 +155,12 @@ void clearScreen(Memimage *frame) {
 	memfillcolor(frame, DTransparent);
 }
 
+void updateCamera(void) {
+	camerax += 2 * cos(cameraAngle);
+	cameray += 2 * sin(cameraAngle);
+	cameraAngle += 0.01;
+}
+
 void redraw(void) {
 	Memimage *frame;
 	int nbits;
@@ -168,9 +174,7 @@ void redraw(void) {
 	bits = malloc(nbits);
 
 	/* Game Logic */
-	camerax += 2 * cos(cameraAngle);
-	cameray += 2 * sin(cameraAngle);
-	cameraAngle += 0.01;
+	updateCamera();
 
 	/* Rendering routines */
 	clearScreen(frame);
