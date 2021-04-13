@@ -18,7 +18,7 @@ int cameraHorizon = 120;
 int cameraDistance = 800;
 int cameraHeight = 150;
 
-int bgColor = (144 << 24) + (144 << 16) + (224 << 8);
+int bgColor = (150 << 24) + (170 << 16) + (170 << 8);
 Image *bgim;
 
 /* Menus */
@@ -48,17 +48,18 @@ void paintRgb(Memimage *frame, int x, int y, int color) {
 	Memimage *mi;
 	Rectangle r;
 
-	mi = allocmemimage(Rect(0, 0, 1, 1), frame->chan);
-	memfillcolor(mi, color);
-
 	r = frame->r;
 	r.min.x += x;
 	r.min.y += y;
 	r.max.x = r.min.x + 1;
 	r.max.y = r.min.y + 1;
 
-	memimagedraw(frame, r, mi, ZP, nil, ZP, S);
-	freememimage(mi);
+	// FIXME: This assumes color to be 24 bit RGB
+	uchar bits[4];
+	bits[2] = color >> 24;
+	bits[1] = color >> 16;
+	bits[0] = color >> 8;
+	loadmemimage(frame, r, bits, sizeof bits);
 }
 
 void writePixel(Image *dst, Point p, int color) {
@@ -76,7 +77,7 @@ void writePixel(Image *dst, Point p, int color) {
 	loadimage(dst, r, bits, sizeof bits);
 }
 
-void drawVerticalLine(Image *dst, int x, int ytop, int ybottom,
+void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom,
 		      int color) {
 	if (ytop < 0) {
 		ytop = 0;
@@ -84,7 +85,7 @@ void drawVerticalLine(Image *dst, int x, int ytop, int ybottom,
 	if (ytop > ybottom) return;
 
 	for (int y = ytop; y < ybottom; y++) {
-		writePixel(dst, Pt(x, y), color);
+		paintRgb(frame, x, y, color);
 	}
 }
 
@@ -100,7 +101,7 @@ int addFog(int color, int depth) {
 	return (r << 24) + (g << 16) + (b << 8);
 }
 
-void render(double px, double py, double deg, int height, int horizon, int scaleHeight, int distance, int screenWidth, int screenHeight) {
+void render(Memimage *frame, double px, double py, double deg, int height, int horizon, int scaleHeight, int distance, int screenWidth, int screenHeight) {
 	int *yBuffer;
 
 	yBuffer = malloc(screenWidth * sizeof(int));
@@ -133,7 +134,7 @@ void render(double px, double py, double deg, int height, int horizon, int scale
 			int heightOfHeightMap = hmap[offsetX][offsetY] & 255;
 			int heightOnScreen = (int) ((height - heightOfHeightMap) * invz + horizon);
 			int color = addFog(cmap[offsetX][offsetY], z);
-			drawVerticalLine(screen, i, heightOnScreen, yBuffer[i], color);
+			drawVerticalLine(frame, i, heightOnScreen, yBuffer[i], color);
 
 			if (heightOnScreen < yBuffer[i])
 				yBuffer[i] = heightOnScreen;
@@ -148,17 +149,43 @@ void render(double px, double py, double deg, int height, int horizon, int scale
 	free(yBuffer);
 }
 
-void drawBackground(void) {
-	draw(screen, screen->r, bgim, nil, ZP);
+void drawBackground(Memimage *frame) {
+	// draw(screen, screen->r, bgim, nil, ZP);
+	memfillcolor(frame, bgColor);
+}
+
+void clearScreen(Memimage *frame) {
+	memfillcolor(frame, DNofill);
 }
 
 void redraw(void) {
-	drawBackground();
-	render(camerax, cameray, cameraAngle, cameraHeight, cameraHorizon, 120, cameraDistance, Dx(screen->r), Dy(screen->r));
+	Memimage *frame;
+	int nbits;
+	uchar *bits;
 
+	/* Back buffer for the double buffering algorithm  */
+	frame = allocmemimage(screen->r, screen->chan);
+
+	/* raw memory for the load/unload */
+	nbits = bytesperline(frame->r, frame->depth) * Dy(frame->r);
+	bits = malloc(nbits);
+
+	/* Game Logic */
 	camerax += 2 * cos(cameraAngle);
 	cameray += 2 * sin(cameraAngle);
 	cameraAngle += 0.01;
+
+	/* Rendering routines */
+	clearScreen(frame);
+	drawBackground(frame);
+	render(frame, camerax, cameray, cameraAngle, cameraHeight, cameraHorizon, 120, cameraDistance, Dx(screen->r), Dy(screen->r));
+
+	/* move back buffer to front buffer */
+	unloadmemimage(frame, frame->r, bits, nbits);
+	loadimage(screen, frame->r, bits, nbits);
+	
+	free(bits);
+	freememimage(frame);
 }
 
 void eresized(int new) {
