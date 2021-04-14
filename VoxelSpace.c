@@ -212,6 +212,7 @@ int loadImage(char *file, int buf[IMSIZE][IMSIZE]) {
 	}
 
 	close(fd);
+	freememimage(mi);
 	return 0;
 }
 
