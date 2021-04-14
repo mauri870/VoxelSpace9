@@ -19,7 +19,6 @@ int cameraDistance = 800;
 int cameraHeight = 150;
 
 int bgColor = (150 << 24) + (170 << 16) + (170 << 8);
-Image *bgim;
 
 /* Menus */
 char *buttons[] = {"exit", 0};
@@ -45,7 +44,6 @@ int getPixelColor(Memimage *im, Point p) {
 }
 
 void paintRgb(Memimage *frame, int x, int y, int color) {
-	Memimage *mi;
 	Rectangle r;
 
 	r = frame->r;
@@ -241,9 +239,6 @@ void main(int argc, char *argv[]) {
 	/* Load cmap and hmap images */
 	if (loadImage(argv[1], cmap) < 0) sysfatal("LoadImage cmap: %r");
 	if (loadImage(argv[2], hmap) < 0) sysfatal("LoadImage hmap: %r");
-
-	/* Allocate background color only once */
-	bgim = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, bgColor);
 
 	/* cleanup images */
 	atexit(_cleanup);
