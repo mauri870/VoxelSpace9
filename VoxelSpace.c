@@ -99,7 +99,7 @@ int addFog(int color, int depth) {
 	return (r << 24) + (g << 16) + (b << 8);
 }
 
-void render(Memimage *frame, double px, double py, double deg, int height, int horizon, int scaleHeight, int distance, int screenWidth, int screenHeight) {
+void render(Memimage *frame, double px, double py, double deg, int height, int horizon, int distance, int screenWidth, int screenHeight) {
 	int *yBuffer;
 
 	yBuffer = malloc(screenWidth * sizeof(int));
@@ -109,10 +109,9 @@ void render(Memimage *frame, double px, double py, double deg, int height, int h
 	double s = sin(deg);
 	double c = cos(deg);
 
-	double z = 1;
 	double dz = 1.0;
 
-	for (z = 1; z < distance; z += dz) {
+	for (double z = 1; z < distance; z += dz) {
 		double plx = -c * z - s * z;
 		double ply = s * z - c * z;
 
@@ -179,7 +178,7 @@ void redraw(void) {
 	/* Rendering routines */
 	clearScreen(frame);
 	drawBackground(frame);
-	render(frame, camerax, cameray, cameraAngle, cameraHeight, cameraHorizon, 120, cameraDistance, Dx(screen->r), Dy(screen->r));
+	render(frame, camerax, cameray, cameraAngle, cameraHeight, cameraHorizon, cameraDistance, Dx(screen->r), Dy(screen->r));
 
 	/* move back buffer to front buffer */
 	unloadmemimage(frame, frame->r, bits, nbits);
