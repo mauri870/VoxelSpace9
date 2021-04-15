@@ -43,14 +43,12 @@ int getPixelColor(Memimage *im, Point p) {
 	return color;
 }
 
-void paintRgb(Memimage *frame, int x, int y, int color) {
+void writeMemimagePixel(Memimage *frame, Point p, int color) {
 	Rectangle r;
 
 	r = frame->r;
-	r.min.x += x;
-	r.min.y += y;
-	r.max.x = r.min.x + 1;
-	r.max.y = r.min.y + 1;
+	r.min = addpt(r.min, p);
+	r.max = addpt(r.min, Pt(1, 1));
 
 	// FIXME: This assumes color to be 24 bit RGB
 	uchar bits[4];
@@ -60,7 +58,7 @@ void paintRgb(Memimage *frame, int x, int y, int color) {
 	loadmemimage(frame, r, bits, sizeof bits);
 }
 
-void writePixel(Image *dst, Point p, int color) {
+void writeImagePixel(Image *dst, Point p, int color) {
 	Rectangle r;
 
 	r = dst->r;
@@ -83,7 +81,7 @@ void drawVerticalLine(Memimage *frame, int x, int ytop, int ybottom,
 	if (ytop > ybottom) return;
 
 	for (int y = ytop; y < ybottom; y++) {
-		paintRgb(frame, x, y, color);
+		writeMemimagePixel(frame, Pt(x, y), color);
 	}
 }
 
