@@ -224,9 +224,6 @@ void drawString(char *msg) {
 	       font, msg);
 }
 
-void _cleanup(void) {
-}
-
 void main(int argc, char *argv[]) {
 	Event ev;
 	int e, timer;
@@ -243,9 +240,6 @@ void main(int argc, char *argv[]) {
 	/* Load cmap and hmap images */
 	if (loadImage(argv[1], cmap) < 0) sysfatal("LoadImage cmap: %r");
 	if (loadImage(argv[2], hmap) < 0) sysfatal("LoadImage hmap: %r");
-
-	/* cleanup images */
-	atexit(_cleanup);
 
 	/* Trigger a initial resize */
 	eresized(0);
