@@ -3,6 +3,8 @@ VoxelSpace9
 
 Voxel Space like algorithm implemented in Plan9.
 
+[YouTube Playlist](https://www.youtube.com/playlist?list=PLajfEB5AiRL8ufbrBBPsGgkn7hd7goBs6)
+
 Installation
 -----
 
