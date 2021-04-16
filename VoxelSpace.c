@@ -15,7 +15,7 @@ double camerax = 800;
 double cameray = 800;
 double cameraAngle = 0;
 int cameraHorizon = 120;
-int cameraDistance = 800;
+int cameraDistance = 1000;
 int cameraHeight = 150;
 
 int bgColor = (150 << 24) + (170 << 16) + (170 << 8);
@@ -35,7 +35,7 @@ int getPixelColor(Memimage *im, Point p) {
 	/* Height map has chan k8 */
 	if (ret == 1) return data[0];
 
-	/* Color map image has chan r8g8b8 but data is actually b g r */
+	/* Color map image has chan r8g8b8 but data is actually b g r in memory */
 	color = (data[2] & 255) << 24;
 	color |= (data[1] & 255) << 16;
 	color |= (data[0] & 255) << 8;
@@ -90,7 +90,7 @@ int addFog(int color, int depth) {
 	int g = (color >> 16) & 255;
 	int b = (color >> 8) & 255;
 	double p = 0.0;
-	if (depth > 100) p = (depth - 100) / 500.0;
+	if (depth > 100) p = (depth - 100) / 1000.0;
 	r = (int)(r + (150 - r) * p);
 	g = (int)(g + (170 - g) * p);
 	b = (int)(b + (170 - b) * p);
