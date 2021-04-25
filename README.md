@@ -1,12 +1,10 @@
-VoxelSpace9
-======================
+# VoxelSpace9
 
 Voxel Space like algorithm implemented in Plan9.
 
 [YouTube Playlist](https://www.youtube.com/playlist?list=PLajfEB5AiRL8ufbrBBPsGgkn7hd7goBs6)
 
-Installation
------
+## Installation
 
 Install git from https://github.com/oridb/git9 then
 
@@ -28,5 +26,11 @@ In order to run use a rc script provided with the code
 
         % RunVoxelSpace
 
-![Plan9 VoxelSpace](demo.png?raw=true)
+## Colormaps
 
+The original sources for the colormaps/heightmaps are listed below.
+
+- [Mars](http://planetpixelemporium.com/mars.html)
+- [Comanche](https://github.com/s-macke/VoxelSpace)
+
+![Plan9 VoxelSpace](demo.png?raw=true)
