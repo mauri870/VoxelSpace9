@@ -1,14 +1,7 @@
 </$objtype/mkfile
 
-ALL=VoxelSpace
+TARG=VoxelSpace
+OFILES=VoxelSpace.$O
 
-all:V: $ALL
-
-%: %.$O
-	$LD -o $target $prereq
-
-%.$O: %.c
-	$CC $CFLAGS $stem.c
-
-clean:V:
-    rm -f $ALL *.[$OS]
+BIN=/$objtype/bin
+</sys/src/cmd/mkone
