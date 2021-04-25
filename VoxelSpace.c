@@ -155,7 +155,7 @@ void clearScreen(Memimage *frame) {
 void updateCamera(void) {
 	camerax += 2 * cos(cameraAngle);
 	cameray += 2 * sin(cameraAngle);
-	cameraAngle += 0.01;
+	cameraAngle += 0.001;
 }
 
 void redraw(void) {
