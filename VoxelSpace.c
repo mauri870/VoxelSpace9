@@ -5,11 +5,12 @@
 #include <event.h>
 #include <memdraw.h>
 
-#define IMSIZE 1024
+#define WSIZE 1024
+#define HSIZE 1024
 /* Colormap pixel data */
-int cmap[IMSIZE][IMSIZE];
+int cmap[WSIZE][HSIZE];
 /* Heightmap pixel data */
-int hmap[IMSIZE][IMSIZE];
+int hmap[WSIZE][HSIZE];
 
 double camerax = 800;
 double cameray = 800;
@@ -193,7 +194,7 @@ void eresized(int new) {
 	redraw();
 }
 
-int loadImage(char *file, int buf[IMSIZE][IMSIZE]) {
+int loadImage(char *file, int buf[WSIZE][HSIZE]) {
 	Memimage *mi;
 	Point p;
 	int fd;
@@ -202,8 +203,8 @@ int loadImage(char *file, int buf[IMSIZE][IMSIZE]) {
 
 	if ((mi = readmemimage(fd)) == nil) return -1;
 
-	for (int i = 0; i < IMSIZE; i++) {
-		for (int j = 0; j < IMSIZE; j++) {
+	for (int i = 0; i < WSIZE; i++) {
+		for (int j = 0; j < HSIZE; j++) {
 			p.x = i;
 			p.y = j;
 			buf[i][j] = getPixelColor(mi, p);
