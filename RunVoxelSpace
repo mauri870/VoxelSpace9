@@ -1,5 +1,7 @@
 #!/bin/rc -e
 
-mk clean && mk 
+mk nuke
+mk uninstall
+mk install
 
 VoxelSpace <{png -tc maps/C1W.png} <{png -tc maps/D1.png}
