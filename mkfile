@@ -7,4 +7,4 @@ BIN=/$objtype/bin
 </sys/src/cmd/mkone
 
 uninstall:V:
-	rm $BIN/$TARG
+	rm $BIN/$TARG || echo
