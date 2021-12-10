@@ -18,11 +18,12 @@ double cameraAngle = 0;
 int cameraHorizon = 120;
 int cameraDistance = 1000;
 int cameraHeight = 150;
+int cameraAutoMove = 0;
 
 int bgColor = (150 << 24) + (170 << 16) + (170 << 8);
 
 /* Menus */
-char *buttons[] = {"exit", 0};
+char *buttons[] = {"camerautomove", "exit", 0};
 Menu menu = {buttons};
 
 int getPixelColor(Memimage *im, Point p) {
@@ -154,9 +155,11 @@ void clearScreen(Memimage *frame) {
 }
 
 void updateCamera(void) {
-	camerax += 2 * cos(cameraAngle);
-	cameray += 2 * sin(cameraAngle);
-	cameraAngle += 0.001;
+	if (cameraAutoMove) {
+		camerax -= 2 * sin(cameraAngle);
+		cameray -= 2 * cos(cameraAngle);
+		cameraAngle += 0.001;
+	}
 }
 
 void redraw(void) {
@@ -251,9 +254,15 @@ void main(int argc, char *argv[]) {
 	for (;;) {
 		switch (eread(Emouse|Ekeyboard|Etimer, &ev)) {
 		case Emouse:
-			if ((ev.mouse.buttons & 4) && 
-				(emenuhit(3, &ev.mouse, &menu) == 0)) {
-				exits(nil);
+			if (ev.mouse.buttons & 4)  {
+				if (emenuhit(3, &ev.mouse, &menu) == 0) {
+					cameraAutoMove = (int) !cameraAutoMove;
+				}
+
+				if (emenuhit(3, &ev.mouse, &menu) == 1) {
+					exits(nil);
+				}
+
 			}
 			break;
 		case Ekeyboard:
