@@ -217,14 +217,13 @@ int loadImage(char *file, int buf[WSIZE][HSIZE]) {
 }
 
 void drawString(char *msg) {
-	string(screen, Pt(100, 100),
-	       allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, DRed), ZP,
+	string(screen, addpt(screen->r.min, Pt(4, 4)),
+	       display->black, ZP,
 	       font, msg);
 }
 
 void main(int argc, char *argv[]) {
 	Event ev;
-	int e, timer;
 
 	if (argc != 3)
 		sysfatal("Please provide colormap and heightmap file");
@@ -242,21 +241,52 @@ void main(int argc, char *argv[]) {
 	/* Trigger a initial resize */
 	eresized(0);
 
-	einit(Emouse);
+	einit(Emouse | Ekeyboard);
 
 	/* Timer for the event loop */
-	timer = etimer(0, 1000 / 30);
+	int Etimer = etimer(0, 1000 / 30);
+	char cameradbgmsg[200];
 
 	/* Main event loop */
 	for (;;) {
-		e = event(&ev);
+		switch (eread(Emouse|Ekeyboard|Etimer, &ev)) {
+		case Emouse:
+			if ((ev.mouse.buttons & 4) && 
+				(emenuhit(3, &ev.mouse, &menu) == 0)) {
+				exits(nil);
+			}
+			break;
+		case Ekeyboard:
+			switch (ev.kbdc) {
+				case 'w':
+					camerax -= 2 * sin(cameraAngle);
+					cameray -= 2 * cos(cameraAngle);
+					break;
+				case 'a':
+					cameraAngle += 0.01;
+					break;
+				case 's':
+					camerax -= -2 * sin(cameraAngle);
+					cameray -= -2 * cos(cameraAngle);
+					break;
+				case 'd':
+					cameraAngle -= 0.01;
+					break;
+				case 'q':
+					cameraHeight -= 1;
+					break;
+				case 'e':
+					cameraHeight += 1;
+					break;
+			}
+			break;
+		default: // Etimer
+			redraw();
+			break;
+		}
 
-		/* Check if user select the exit option from menu context */
-		if ((e == Emouse) && (ev.mouse.buttons & 4) &&
-		    (emenuhit(3, &ev.mouse, &menu) == 0))
-			exits(nil);
-
-		/* If the timer ticks... */
-		if (e == timer) redraw();
+		char msg[100];
+		sprintf(msg, "Use WASD to move around");
+		drawString(msg);
 	}
 }
