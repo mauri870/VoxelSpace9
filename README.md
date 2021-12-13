@@ -26,6 +26,8 @@ In order to run use a rc script provided with the code
 
         % RunVoxelSpace
 
+Use WASD to move around or toggle cameraautomove from the settings by clicking the right mouse button.
+
 ## Colormaps
 
 The original sources for the colormaps/heightmaps are listed below.
